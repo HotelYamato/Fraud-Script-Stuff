@@ -1,0 +1,10 @@
+ -------- Fraud Modules List -------------
+| 1 - AVS Response                        |
+| 2 - Advanced Transaction Filter         |
+| 3 - Block by Card Country               |
+| 4 - BIN Range Blocker                   |
+| 5 - Country Blocker                     |
+| 6 - Multiple Credit Cards               |
+| 7 - Transaction Amount                  |
+| 8 - Captcha                             |
+ -----------------------------------------
