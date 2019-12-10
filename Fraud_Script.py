@@ -1,6 +1,7 @@
 """ 
 Justin Moon
 1/29/19
+last edit: sept 29, 2019
 
 Maintaining this python 2.7v due to python3 SSL cert shenanigans
 
@@ -13,7 +14,12 @@ Differences between this and python3 ver.:
 Things to add:
     - check for ip branded reseller
     - prompt user for source type (epayment/tranapi/etc)
-    x clean up fraudmodule prompt/capture style?
+"""
+
+"""
+FOR THE NETOPS GUYS
+if you want to test the script without dumping junk reports in our fraud project, just use my personal git testing project on gitlab by changing the project ID# from 62 to 218
+I have to add you guys to the project if you wanna test, or you can create your own personal project and use that ID if you wish, just let me know 
 """
 import datetime
 import sys
@@ -22,12 +28,12 @@ def fraudTemplate():
 
     #grabs gitlab token from txt file, creates variable for issue creation later as well as handles authentication
     t = open("api_token.txt", "r")
-    gl = gitlab.Gitlab('https://usaepay.gitlab.com/',apie_token = t.read())
+    gl = gitlab.Gitlab('https://gitlab.usaepay.staff/',private_token = t.read())
     gl.auth()
-    fraud_project = gl.projects.get(10816201)
+    fraud_project = gl.projects.get(62)
     current_id = gl.user.id
     t.close()
-    
+
     #first table in fraud report. user enters merch info. Any blank spaces are filled with dashes for uniform formatting
     now = datetime.datetime.now()
     print('')
@@ -37,11 +43,8 @@ def fraudTemplate():
     merch_name = raw_input("Merchant name? ")
     merch_ID = raw_input("MID? ")
     reseller = raw_input("Reseller? ")
-    
-# Trying to make the ip-branded reseller check work here
-
-#    if reseller in open('ip_branded_resellers.txt','r').read():
-#        reseller = reseller+" (IP Branded Reseller)"
+    if reseller in open('ip_branded_resellers.txt').read():
+        reseller = reseller+" (IP Branded Reseller)"
     date = raw_input("Date? (just press enter key if you want current date) ")
     if date == "today" or not date:
         date = now.strftime("%x")
@@ -62,7 +65,7 @@ def fraudTemplate():
     amount = raw_input("Dollar Amount? ")
     ip_address = raw_input("IP Address(es?) ")
     description = raw_input("Any nonstandard details? (e.x. 'Testref' in description)? ")
-    patterns.extend((card_holder, avs_street, card_number, amount, ip_address))
+    patterns.extend((card_holder, avs_street, card_number, amount, ip_address, description))
     patterns = [" - " if x == "" else x for x in patterns]
     total_fraud = raw_input("Total amount of fraudulent transactions? ")
     if not total_fraud:
@@ -74,7 +77,7 @@ def fraudTemplate():
     else:
         source_list = " - "
     print('')
-
+    
     #alternative capture method for what modules were used
     print("Please enter which fraud modlues were used via their matching numbers, separated by spaces (e.g. 1 2 4 6)")
     print('')
@@ -84,10 +87,17 @@ def fraudTemplate():
     
     fraud_modules = raw_input("Used modules: ")
     choices = [int(x) for x in fraud_modules.split()]
+    #print(choices)
     fraud_modules = [" "]*10
-    for item in choices:
-        fraud_modules.insert(item-1,"x")
-    print(fraud_modules)
+    for x in choices:
+        fraud_modules.insert(x-1,"x")
+    if "x" in fraud_modules[1]:
+        adv_tran_fields=raw_input("What fields were specficially targeted in the Advanced Transaction Filter module, and how were they targeted?: ")
+    else:
+        adv_tran_fields="n/a"
+    #print(fraud_modules)
+
+
 
 
     print("NetOps Details:")
@@ -125,7 +135,7 @@ def fraudTemplate():
         "* **Fraud Modules Used**  ",
         "* ["+fraud_modules[0]+"] AVS Response",
         "* ["+fraud_modules[1]+"] Advanced Transaction Filter",
-        "* Fields targeted by Advaned Transaction Filter: "+description,
+        "* Fields targeted by Advaned Transaction Filter: "+adv_tran_fields,
         "* ["+fraud_modules[2]+"] Block by Card Country",
         "* ["+fraud_modules[3]+"] BIN Range Blocker",
         "* ["+fraud_modules[4]+"] Country Blocker",
